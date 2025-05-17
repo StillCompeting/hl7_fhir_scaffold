@@ -35,7 +35,7 @@ async def create_resource(resource_type: str, request: Request):
 
 @app.get("/{resource_type}")
 async def search_resource(resource_type: str, request: Request):
-    params = dict(request.query_params)
+    params = list(request.query_params.multi_items())
     return await proxy_request("GET", resource_type, params=params)
 
 @app.get("/{resource_type}/{id}")
