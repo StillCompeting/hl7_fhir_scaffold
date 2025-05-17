@@ -46,7 +46,7 @@ def hl7_to_fhir(hl7_str: str) -> Bundle:
     mh.destination = [{"name": msh.MSH_5.value}]
     ts = msh.MSH_7.value
     dt = datetime.datetime.strptime(ts, "%Y%m%d%H%M%S")
-    # mh.timestamp = dt.isoformat()  # removed: timestamp field unsupported by fhir.resources MessageHeader model
+    mh.timestamp = dt.isoformat()
 
     mh_entry = BundleEntry.model_construct()
     mh_entry.fullUrl = "urn:uuid:message-header"
