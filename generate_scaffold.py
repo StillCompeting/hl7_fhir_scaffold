@@ -6,7 +6,7 @@ Edit `message_types` then run:
     python generate_scaffold.py
 """
 
-import os, datetime, textwrap
+import os, datetime
 
 message_types = [
     'ADT_A01', 'ADT_A03',
