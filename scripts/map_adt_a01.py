@@ -10,6 +10,12 @@ Dependencies:
 from hl7apy import parser
 from fhir.resources.bundle import Bundle
 
+def _construct(model_cls, **fields):
+    """Compatibility wrapper for Pydantic v1 and v2."""
+    if hasattr(model_cls, "model_construct"):
+        return model_cls.model_construct(**fields)  # Pydantic >=2
+    return model_cls.construct(**fields)
+
 STUB_HL7_MESSAGE = (
     "MSH|^~\\&|SendingApp|SendingFac|ReceivingApp|ReceivingFac|20250420130120||ADT|123456|P|2.5\r"
     "PID|1||12345^^^MR||Doe^John||19800101|M\r"
@@ -23,10 +29,12 @@ def hl7_to_fhir(hl7_str: str) -> Bundle:
     pid = msg.PID
 
     # Create Bundle
-    bundle = Bundle.construct()
-    bundle.type = "message"
-    bundle.meta = {"tag": [{"code": "ADT_A01"}]}
-    bundle.entry = []
+    bundle = _construct(
+        Bundle,
+        type="message",
+        meta={"tag": [{"code": "ADT_A01"}]},
+        entry=[],
+    )
 
     # Import FHIR resource classes
     from fhir.resources.bundle import BundleEntry
@@ -37,35 +45,52 @@ def hl7_to_fhir(hl7_str: str) -> Bundle:
     import datetime
 
     # Map MessageHeader
-    mh = MessageHeader.construct()
-    mh.eventCoding = Coding.construct()
-    mh.eventCoding.system = "http://terminology.hl7.org/CodeSystem/message-event"
-    mh.eventCoding.code = msh.MSH_9.value
-    mh.id = "message-header"
-    mh.source = {"name": msh.MSH_3.value}
-    mh.destination = [{"name": msh.MSH_5.value}]
+    coding = _construct(
+        Coding,
+        system="http://terminology.hl7.org/CodeSystem/message-event",
+        code=msh.MSH_9.value,
+    )
+    mh = _construct(
+        MessageHeader,
+        eventCoding=coding,
+        id="message-header",
+        source={"name": msh.MSH_3.value},
+        destination=[{"name": msh.MSH_5.value}],
+    )
     ts = msh.MSH_7.value
     dt = datetime.datetime.strptime(ts, "%Y%m%d%H%M%S")
-    mh.timestamp = dt.isoformat()
+    if hasattr(mh, "timestamp"):
+        object.__setattr__(mh, "timestamp", dt.isoformat())
 
-    mh_entry = BundleEntry.construct()
-    mh_entry.fullUrl = "urn:uuid:message-header"
-    mh_entry.resource = mh
+    mh_entry = _construct(
+        BundleEntry,
+        fullUrl="urn:uuid:message-header",
+        resource=mh,
+    )
     bundle.entry.append(mh_entry)
 
     # Map Patient
-    pat = Patient.construct()
-    # Use only the local ID component without assigning authority for FHIR ID
-    pat.id = pid.PID_3.value.split("^")[0]
+    patient_id = pid.PID_3.value.split("^")[0]
     parts = pid.PID_5.value.split("^")
-    pat.name = [HumanName.construct(family=parts[0], given=[parts[1] if len(parts) > 1 else ""])]
+    name = _construct(
+        HumanName,
+        family=parts[0],
+        given=[parts[1] if len(parts) > 1 else ""],
+    )
     bd = pid.PID_7.value
-    pat.birthDate = datetime.datetime.strptime(bd, "%Y%m%d").date().isoformat()
-    pat.gender = "male" if pid.PID_8.value.upper() == "M" else "female"
+    pat = _construct(
+        Patient,
+        id=patient_id,
+        name=[name],
+        birthDate=datetime.datetime.strptime(bd, "%Y%m%d").date().isoformat(),
+        gender="male" if pid.PID_8.value.upper() == "M" else "female",
+    )
 
-    pat_entry = BundleEntry.construct()
-    pat_entry.fullUrl = f"urn:uuid:patient-{pat.id}"
-    pat_entry.resource = pat
+    pat_entry = _construct(
+        BundleEntry,
+        fullUrl=f"urn:uuid:patient-{patient_id}",
+        resource=pat,
+    )
     bundle.entry.append(pat_entry)
 
     return bundle
