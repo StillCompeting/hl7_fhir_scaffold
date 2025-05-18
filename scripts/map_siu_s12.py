@@ -10,9 +10,10 @@ Dependencies:
 from hl7apy import parser
 from fhir.resources.bundle import Bundle
 
-STUB_HL7_MESSAGE = """MSH|^~\\&|SendingApp|SendingFac|ReceivingApp|ReceivingFac|20250420130120||SIU|123456|P|2.5
-PID|1||12345^^^MR||Doe^John||19800101|M
-"""  # noqa: E501
+STUB_HL7_MESSAGE = (
+    "MSH|^~\\&|SendingApp|SendingFac|ReceivingApp|ReceivingFac|20250420130120||SIU|123456|P|2.5\\r"
+    "PID|1||12345^^^MR||Doe^John||19800101|M\\r"
+)  # noqa: E501
 
 
 def hl7_to_fhir(hl7_str: str) -> Bundle:
