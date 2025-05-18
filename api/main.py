@@ -4,7 +4,9 @@ from fastapi import FastAPI, Request, HTTPException
 import httpx
 
 # Load environment variables from .env
-load_dotenv()
+from pathlib import Path
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
 app = FastAPI(
     title="CMS0057 FHIR Proxy",
@@ -13,12 +15,21 @@ app = FastAPI(
 )
 
 # Base URL of HAPI-FHIR server
-FHIR_SERVER_URL = os.getenv("FHIR_SERVER_URL", "http://localhost:8080")
+print(f"Environment variables: {os.environ}")  # Debug: Show all environment variables
+FHIR_SERVER_URL = os.getenv("FHIR_SERVER_URL", "http://localhost:8080/fhir")
+print(f"FHIR_SERVER_URL: {FHIR_SERVER_URL}")  # Debug: Show the actual URL being used
 
 async def proxy_request(method: str, path: str, params=None, json_body=None):
     async with httpx.AsyncClient() as client:
         url = f"{FHIR_SERVER_URL}/{path}"
-        response = await client.request(method, url, params=params, json=json_body)
+        print(f"Proxying request to: {url}")  # Debug log
+        print(f"Method: {method}, Params: {params}")  # Debug log
+        try:
+            response = await client.request(method, url, params=params, json=json_body)
+            print(f"Response status: {response.status_code}")  # Debug log
+        except Exception as e:
+            print(f"Error making request: {str(e)}")  # Debug log
+            raise
     try:
         content = response.json()
     except ValueError:
