@@ -21,7 +21,7 @@ def hl7_to_fhir(hl7_str: str) -> Bundle:
     msh = msg.MSH
     pid = msg.PID
 
-    bundle = Bundle.model_construct()
+    bundle = Bundle.construct()
     bundle.type = "message"
     bundle.meta = {"tag": [{"code": "ORM_O01"}]}
     bundle.entry = []
@@ -33,8 +33,8 @@ def hl7_to_fhir(hl7_str: str) -> Bundle:
     from fhir.resources.humanname import HumanName
     import datetime
 
-    mh = MessageHeader.model_construct()
-    mh.eventCoding = Coding.model_construct()
+    mh = MessageHeader.construct()
+    mh.eventCoding = Coding.construct()
     mh.eventCoding.system = "http://terminology.hl7.org/CodeSystem/message-event"
     mh.eventCoding.code = msh.MSH_9.value
     mh.id = "message-header"
@@ -44,20 +44,20 @@ def hl7_to_fhir(hl7_str: str) -> Bundle:
     dt = datetime.datetime.strptime(ts, "%Y%m%d%H%M%S")
     mh.timestamp = dt.isoformat()
 
-    mh_entry = BundleEntry.model_construct()
+    mh_entry = BundleEntry.construct()
     mh_entry.fullUrl = "urn:uuid:message-header"
     mh_entry.resource = mh
     bundle.entry.append(mh_entry)
 
-    pat = Patient.model_construct()
+    pat = Patient.construct()
     pat.id = pid.PID_3.value.split("^")[0]
     parts = pid.PID_5.value.split("^")
-    pat.name = [HumanName.model_construct(family=parts[0], given=[parts[1] if len(parts) > 1 else ""])]
+    pat.name = [HumanName.construct(family=parts[0], given=[parts[1] if len(parts) > 1 else ""])]
     bd = pid.PID_7.value
     pat.birthDate = datetime.datetime.strptime(bd, "%Y%m%d").date().isoformat()
     pat.gender = "male" if pid.PID_8.value.upper() == "M" else "female"
 
-    pat_entry = BundleEntry.model_construct()
+    pat_entry = BundleEntry.construct()
     pat_entry.fullUrl = f"urn:uuid:patient-{pat.id}"
     pat_entry.resource = pat
     bundle.entry.append(pat_entry)

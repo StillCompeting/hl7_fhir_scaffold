@@ -6,8 +6,8 @@ This FastAPI application proxies RESTful requests to a HAPI-FHIR server, providi
 
 1. Create a `.env` file in the project root:
    ```
-   FHIR_SERVER_URL=http://localhost:8080/fhir
-   PORT=8000
+   FHIR_SERVER_URL=http://localhost:8080
+   PORT=8001
    ```
 2. Install dependencies:
    ```bash

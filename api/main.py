@@ -13,7 +13,8 @@ app = FastAPI(
 )
 
 # Base URL of HAPI-FHIR server
-FHIR_SERVER_URL = os.getenv("FHIR_SERVER_URL", "http://localhost:8080/fhir")
+# Base URL of HAPI-FHIR server
+FHIR_SERVER_URL = os.getenv("FHIR_SERVER_URL", "http://localhost:8080")
 
 async def proxy_request(method: str, path: str, params=None, json_body=None):
     async with httpx.AsyncClient() as client:
@@ -77,4 +78,4 @@ async def evaluate_measure(id: str, request: Request):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)), reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8001)), reload=True)
