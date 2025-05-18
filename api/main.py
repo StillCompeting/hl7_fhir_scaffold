@@ -13,7 +13,6 @@ app = FastAPI(
 )
 
 # Base URL of HAPI-FHIR server
-# Base URL of HAPI-FHIR server
 FHIR_SERVER_URL = os.getenv("FHIR_SERVER_URL", "http://localhost:8080")
 
 async def proxy_request(method: str, path: str, params=None, json_body=None):
